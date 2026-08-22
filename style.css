@@ -1,0 +1,161 @@
+@font-face {
+  font-family: 'InterDemo';
+  src: url('fonts/inter-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+
+:root {
+  --bg: #f6f6f6;
+  --ink: #000;
+  --muted: #808080;
+  /* design-space reference frame (matches the supplied Figma export) */
+  --dw: 1280;
+  --dh: 741;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: auto; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'InterDemo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ---------------------------------------------------------------
+   Pinned transition
+   The pin wrapper is one viewport tall; ScrollTrigger pins it and
+   scrubs the whole hero -> logo timeline across `end`.
+   --------------------------------------------------------------- */
+.pin-wrap {
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.stage {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Everything inside .canvas is authored in design pixels (1280x741)
+   and scaled to the viewport, so the build matches the mockup exactly. */
+.canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1280px;
+  height: 741px;
+  margin: -370.5px 0 0 -640px;
+  transform-origin: 50% 50%;
+}
+
+/* ---------------- headline ---------------- */
+.line {
+  position: absolute;
+  margin: 0;
+  font-weight: 300;
+  font-size: 151.3px;    /* cap height = 112px, same as the mockup */
+  line-height: 1;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+/* left/top are solved so each line's INK box lands exactly where it
+   sits in Desktop.png (cap tops 88 / 232 / 376 / 526).
+   letter-spacing is solved per line to match the mockup's set widths -
+   swap in the real brand face in Webflow and these all reset to 0. */
+.l1 { left: 68px;  top: 68.85px;  letter-spacing: -3.250px; }
+.l2 { left: 523px; top: 212.85px; letter-spacing: -8.143px; }
+.l3 { left: 68px;  top: 356.85px; letter-spacing: -2.667px; }
+.l4 { left: 257px; top: 505.85px; letter-spacing: -3.300px; color: var(--muted); }
+
+/* ---------------- illustrations ---------------- */
+.fig {
+  position: absolute;
+  will-change: transform, opacity;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---------------- black logo components ---------------- */
+.piece {
+  position: absolute;
+  background: var(--ink);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ---------------- section 3 ---------------- */
+.after {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8vh 6vw;
+}
+.after .col { max-width: 720px; }
+.after h2 {
+  font-weight: 300;
+  font-size: clamp(28px, 4vw, 56px);
+  line-height: 1.05;
+  margin: 0 0 24px;
+  letter-spacing: -0.03em;
+}
+.after p {
+  font-weight: 300;
+  font-size: clamp(15px, 1.35vw, 19px);
+  line-height: 1.6;
+  margin: 0 0 14px;
+  color: #333;
+  max-width: 58ch;
+}
+
+/* ---------------- scroll hint ---------------- */
+.hint {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #999;
+  font-weight: 400;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* ---------------- progress readout (demo only) ---------------- */
+.readout {
+  position: fixed;
+  left: 20px;
+  top: 20px;
+  z-index: 30;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #999;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.readout b { color: #111; font-weight: 500; }
+.bar {
+  margin-top: 6px;
+  width: 150px;
+  height: 2px;
+  background: #ddd;
+}
+.bar i { display: block; height: 100%; width: 0; background: #2222c8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hint { display: none; }
+}

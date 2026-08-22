@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Scroll-controlled hero &rarr; logo transition</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="readout">SCROLL PROGRESS <b>0%</b><span class="bar"><i></i></span></div>
+
+<section class="pin-wrap">
+  <div class="stage">
+    <div class="canvas">
+      <p class="line l1">CORPORATE</p>
+      <p class="line l2">ADVISORY</p>
+      <p class="line l3">DONE</p>
+      <p class="line l4">DIFFERENTLY</p>
+      <!-- black rectangles + illustrations are injected by main.js -->
+    </div>
+  </div>
+</section>
+
+<section class="after">
+  <div class="col">
+    <h2>The mark is assembled.</h2>
+    <p>Scroll back up &mdash; the whole transition is tied to scroll position, so it runs
+       backwards just as smoothly as it runs forwards.</p>
+    <p>Everything above is one continuous timeline: the typography clears, the figures let
+       go of the black rectangles, the rectangles travel across the screen and the remaining
+       strokes of the mark grow out of the pieces that landed.</p>
+  </div>
+</section>
+
+<div class="hint">Scroll</div>
+
+<script src="gsap.min.js"></script>
+<script src="ScrollTrigger.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
