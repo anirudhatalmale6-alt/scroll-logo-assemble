@@ -25,8 +25,10 @@ are vendored in the repo.
 |---|---|
 | `index.html` | the two screens plus the markup for the headline |
 | `style.css`  | the design frame, type positions, piece styling |
+| `rig.js`     | the walk rig — joint coordinates and the clip-path cuts |
 | `main.js`    | geometry tables + the single scrubbed timeline |
 | `img/`       | the five illustrations, cut out with alpha |
+| `rig-test.html` | phase sheet for tuning the walk cycle |
 
 ### The design frame
 
@@ -63,8 +65,44 @@ each one scales from an edge that touches the piece it is attached to
 (`GROW` in `main.js`), in an order that reads as the mark completing
 itself rather than as ten shapes fading up.
 
+### The figures
+
+Nobody fades. Each figure leaves the frame under its own steam, and only
+once the rectangle they were holding has detached:
+
+* the three standing figures **walk off**, on a real cycle;
+* the crouching figure's tape measure **retracts and takes him with it**;
+* the long bar **shrinks out from under** the seated figure and she drops.
+
+The moment someone lets go they also drop behind the rectangles, so a
+piece flying past crosses in front of them instead of through them.
+
+### The walk cycle
+
+The artwork arrived flat, so `rig.js` cuts each walker into three layers
+at run time — back leg, front leg, body. Every layer is the *same* PNG
+with a different `clip-path`, so there are no extra image assets, only
+the joint coordinates in `RIG`.
+
+The two leg polygons are split by a line through the hip and overlap
+slightly at the top, tapering over 34px, so no sliver of background opens
+up between the thighs at full swing. The legs counter-rotate about the
+hip and the body rises and falls twice per stride.
+
+Stride rate is derived from **distance covered**, not from the clock —
+one step per ~62px — so scrolling slower makes them step slower.
+
+`rig-test.html` renders any walker at ten phases side by side, which is
+how the joint positions were tuned. `?c=tune` switches it to the
+parameter-sweep sheet.
+
+If the illustrator can supply layered SVGs, `rig.js` gets thrown away and
+the limbs (including arms) animate directly.
+
 ## Notes
 
+* `?exit=cut` replaces the walk-offs with a hard cut the instant each
+  rectangle detaches, for comparison.
 * `?record=1` drops the scrub smoothing, for frame-accurate screen capture.
 * `prefers-reduced-motion` skips straight to the finished state.
 * `window.__tl` is exposed so you can step the timeline in the console:

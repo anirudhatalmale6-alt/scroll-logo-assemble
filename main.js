@@ -44,12 +44,30 @@ const HERO = {
 };
 
 /* ---------- 3. illustrations --------------------------------------- */
+/* Nobody fades. Each figure leaves the frame under its own steam, and
+   only once the rectangle they were holding has actually detached.
+   `walk` = rigged walk cycle (see rig.js), `yank` = the tape measure
+   retracts and takes him with it, `drop` = the bar shrinks out from
+   under her.                                                        */
 const FIGS = [
-  { f: 'fig-push-left',   x: 75,   y: 197, w: 106, h: 186, out: { x: -150, y: 40 } },
-  { f: 'fig-carry-right', x: 414,  y: 190, w: 109, h: 193, out: { x: -110, y: 70 } },
-  { f: 'fig-measure',     x: 1044, y: 70,  w: 102, h: 144, out: { x: 170, y: -60 } },
-  { f: 'fig-sit',         x: 718,  y: 303, w: 116, h: 181, out: { x: 60, y: 150 } },
-  { f: 'fig-push-bar',    x: 96,   y: 446, w: 98,  h: 204, out: { x: -160, y: 90 } }
+  { f: 'fig-push-bar', x: 96, y: 446, w: 98, h: 204,
+    walk: { at: 0.38, dur: 0.75, dist: -215, turn: true, near: 15, far: 15, bob: 3 } },
+
+  /* he is crouched over a tape measure, so he cannot walk - he rocks
+     back when his subject vanishes and scurries out still crouching */
+  { f: 'fig-measure', x: 1044, y: 70, w: 102, h: 144,
+    yank: { at: 0.62, anti: 0.18, dur: 0.55, dx: 235, back: -14, rock: -12, pitch: 15, hops: 2, rise: 13 } },
+
+  { f: 'fig-push-left', x: 75, y: 197, w: 106, h: 186,
+    walk: { at: 0.80, dur: 0.70, dist: -200, turn: true, near: 15, far: 15, bob: 3 } },
+
+  { f: 'fig-sit', x: 718, y: 303, w: 116, h: 181,
+    drop: { at: 1.05, dur: 0.75, dy: 470, dx: -40, rot: 16 } },
+
+  /* he is the furthest from the left edge, so he leaves last and slowest -
+     that also keeps him from walking through her on the way out */
+  { f: 'fig-carry-right', x: 414, y: 190, w: 109, h: 193,
+    walk: { at: 1.00, dur: 1.05, dist: -540, turn: false, near: 12, far: 9, bob: 4 } }
 ];
 
 /* The six connectors are sandwiched between two bars. The design frame is
@@ -81,17 +99,37 @@ function rect(id, r) {
 
 Object.keys(LOGO).forEach(k => rect(k, LOGO[k]));
 
+/* Each figure gets three nested boxes so the transforms never fight:
+   .fig travels, .fig-flip turns the figure round, .walker bobs.       */
 FIGS.forEach(f => {
-  const img = document.createElement('img');
-  img.className = 'fig';
-  img.src = 'img/' + f.f + '.png';
-  img.width = f.w;
-  img.height = f.h;
-  img.alt = '';
-  img.style.left = f.x + 'px';
-  img.style.top = f.y + 'px';
-  canvas.appendChild(img);
-  f.el = img;
+  const holder = document.createElement('div');
+  holder.className = 'fig';
+  holder.style.left = f.x + 'px';
+  holder.style.top = f.y + 'px';
+  holder.style.width = f.w + 'px';
+  holder.style.height = f.h + 'px';
+
+  const flip = document.createElement('div');
+  flip.className = 'fig-flip';
+  holder.appendChild(flip);
+
+  if (f.walk) {
+    const wk = buildWalker(f.f, 'img/' + f.f + '.png');
+    flip.appendChild(wk.wrap);
+    f.parts = wk;
+  } else {
+    const img = document.createElement('img');
+    img.src = 'img/' + f.f + '.png';
+    img.width = f.w;
+    img.height = f.h;
+    img.alt = '';
+    img.draggable = false;
+    flip.appendChild(img);
+  }
+
+  canvas.appendChild(holder);
+  f.el = holder;
+  f.flip = flip;
 });
 
 /* ---------- 5. fit the design frame to the viewport ---------------- */
@@ -167,12 +205,66 @@ tl.to('.l1', { y: -180, opacity: 0, ease: 'power2.in', duration: 0.9 }, 0)
   .to('.l3', { x: -220, opacity: 0, ease: 'power2.in', duration: 0.9 }, 0.12)
   .to('.l4', { y: 200, opacity: 0, ease: 'power2.in', duration: 0.9 }, 0.18);
 
-/* -- illustrations let go and drift away ----------------------------- */
-FIGS.forEach((f, i) => {
-  tl.to(f.el, {
-    x: f.out.x, y: f.out.y, opacity: 0, scale: 0.94,
-    ease: 'power2.in', duration: 1.0
-  }, 0.04 * i);
+/* -- the figures leave under their own steam ------------------------- */
+/* ?exit=cut swaps the walk-offs for a hard cut the instant each
+   rectangle detaches, so both options can be compared side by side */
+const CUT = /[?&]exit=cut/.test(location.search);
+
+FIGS.forEach(f => {
+  const spec = f.walk || f.yank || f.drop;
+
+  /* once someone has let go, they drop behind the rectangles - so a piece
+     flying past crosses in front of them instead of through them */
+  tl.set(f.el, { zIndex: 1 }, spec.at);
+
+  if (CUT) {
+    tl.set(f.el, { autoAlpha: 0 }, spec.at);
+    return;
+  }
+
+  if (f.walk) {
+    const w = f.walk;
+    /* one step per ~62px covered, so the stride rate matches the distance
+       travelled rather than the clock - scroll slower, they step slower */
+    const steps = Math.max(3, Math.round(Math.abs(w.dist) / 62));
+    const stepDur = w.dur / steps;
+
+    if (w.turn) {
+      /* squashing through scaleX 0 reads as the figure turning round */
+      tl.to(f.flip, { scaleX: -1, ease: 'power2.inOut', duration: 0.16 }, w.at);
+    }
+    tl.to(f.el, { x: w.dist, ease: 'power1.in', duration: w.dur }, w.at);
+
+    tl.fromTo(f.parts.near, { rotation: w.near },
+      { rotation: -w.near, duration: stepDur, repeat: steps - 1, yoyo: true, ease: 'sine.inOut' }, w.at);
+    tl.fromTo(f.parts.far, { rotation: -w.far },
+      { rotation: w.far, duration: stepDur, repeat: steps - 1, yoyo: true, ease: 'sine.inOut' }, w.at);
+    /* the body rises and falls twice per stride */
+    tl.fromTo(f.parts.wrap, { y: 0 },
+      { y: -w.bob, duration: stepDur / 2, repeat: steps * 2 - 1, yoyo: true, ease: 'sine.inOut' }, w.at);
+  }
+
+  if (f.yank) {
+    const y = f.yank;
+    /* anticipation - he rocks back on his heels as his subject leaves */
+    tl.to(f.el, { x: y.back, ease: 'sine.out', duration: y.anti }, y.at)
+      .to(f.flip, { rotation: y.rock, ease: 'back.out(1.6)', duration: y.anti }, y.at);
+    /* then the tape retracts and takes him with it - he scrambles after
+       it rather than sliding, so the exit still reads as self-propelled */
+    const go = y.at + y.anti;
+    tl.to(f.el, { x: y.dx, ease: 'power2.in', duration: y.dur }, go)
+      .to(f.flip, { rotation: y.pitch, ease: 'power2.in', duration: y.dur }, go);
+    tl.fromTo(f.el, { y: 0 },
+      { y: -y.rise, duration: y.dur / (y.hops * 2), repeat: y.hops * 2 - 1, yoyo: true, ease: 'sine.out' }, go);
+  }
+
+  if (f.drop) {
+    const d = f.drop;
+    /* the bar shrinks out from under her, so she goes straight down */
+    tl.to(f.el, { y: d.dy, ease: 'power2.in', duration: d.dur }, d.at)
+      .to(f.el, { x: d.dx, ease: 'sine.out', duration: d.dur }, d.at)
+      .to(f.flip, { rotation: d.rot, ease: 'sine.in', duration: d.dur }, d.at);
+  }
 });
 
 /* -- the four rectangles detach and travel --------------------------- */

@@ -56,6 +56,7 @@ body {
   height: 741px;
   margin: -370.5px 0 0 -640px;
   transform-origin: 50% 50%;
+  overflow: hidden;   /* figures walk off the edge of the frame, not the window */
 }
 
 /* ---------------- headline ---------------- */
@@ -81,14 +82,33 @@ body {
 /* ---------------- illustrations ---------------- */
 .fig {
   position: absolute;
-  will-change: transform, opacity;
+  z-index: 3;          /* in front of the bars while they are still holding them */
+  will-change: transform;
   pointer-events: none;
   user-select: none;
+}
+.fig-flip,
+.walker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+.fig-flip { transform-origin: 50% 50%; }
+/* one layer per body part - same PNG, different clip-path (see rig.js) */
+.wpart {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background-repeat: no-repeat;
+  will-change: transform;
 }
 
 /* ---------------- black logo components ---------------- */
 .piece {
   position: absolute;
+  z-index: 2;
   background: var(--ink);
   will-change: transform;
   backface-visibility: hidden;

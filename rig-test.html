@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>walk rig tuning sheet</title>
+<style>
+  body { margin:0; background:#f6f6f6; font:11px/1.4 system-ui, sans-serif; color:#666; }
+  .row { display:flex; align-items:flex-end; gap:4px; padding:10px 8px 2px; }
+  .cell { position:relative; }
+  .walker { position:relative; }
+  .wpart { position:absolute; left:0; top:0; background-repeat:no-repeat; }
+  h3 { margin:14px 0 0 10px; font-size:12px; color:#111; font-weight:600; }
+  .ground { border-bottom:1px solid #ddd; }
+</style>
+</head>
+<body>
+<div id="out"></div>
+<script src="rig.js"></script>
+<script>
+const CASES = (new URLSearchParams(location.search).get('c') === 'tune')
+  ? [
+      { name: 'fig-carry-right', amp: 12, far: 9, bob: 4, hemY: 130, slope: 0.10, label: 'hem130 slope.10 12/9' },
+      { name: 'fig-carry-right', amp: 12, far: 9, bob: 4, hemY: 136, slope: 0.05, label: 'hem136 slope.05 12/9' },
+      { name: 'fig-carry-right', amp: 14, far: 6, bob: 5, hemY: 136, slope: 0.00, label: 'hem136 slope0 14/6' },
+      { name: 'fig-carry-right', amp: 10, far: 10, bob: 4, hemY: 142, slope: 0.00, label: 'hem142 slope0 10/10' }
+    ]
+  : [
+      { name: 'fig-push-left',   amp: 15, base: 0, bob: 3, label: '' },
+      { name: 'fig-carry-right', amp: 15, base: 0, bob: 3, label: '' },
+      { name: 'fig-push-bar',    amp: 15, base: 0, bob: 3, label: '' }
+    ];
+
+const PHASES = 10;
+
+CASES.forEach(cs => {
+  const h3 = document.createElement('h3');
+  h3.textContent = cs.name + '  ' + cs.label;
+  out.appendChild(h3);
+  const row = document.createElement('div'); row.className = 'row ground';
+  for (let i = 0; i < PHASES; i++) {
+    const ph = (i / PHASES) * Math.PI * 2;
+    const c = document.createElement('div'); c.className = 'cell';
+    if (cs.hemY !== undefined) RIG[cs.name].hemY = cs.hemY;
+    if (cs.slope !== undefined) RIG[cs.name].slope = cs.slope;
+    const wk = buildWalker(cs.name, 'img/' + cs.name + '.png');
+    wk.near.style.transform = 'rotate(' + ((cs.base||0) + cs.amp * Math.sin(ph)) + 'deg)';
+    wk.far.style.transform = 'rotate(' + ((cs.far===undefined?cs.amp:cs.far) * Math.sin(ph + Math.PI)) + 'deg)';
+    wk.wrap.style.transform = 'translateY(' + (-cs.bob * Math.abs(Math.sin(ph))) + 'px)';
+    c.style.width = wk.rig.w + 'px';
+    c.style.height = wk.rig.h + 'px';
+    c.appendChild(wk.wrap);
+    row.appendChild(c);
+  }
+  out.appendChild(row);
+});
+</script>
+</body>
+</html>
