@@ -52,18 +52,28 @@ const FIGS = [
   { f: 'fig-push-bar',    x: 96,   y: 446, w: 98,  h: 204, out: { x: -160, y: 90 } }
 ];
 
+/* The six connectors are sandwiched between two bars. The design frame is
+   scaled by a fractional factor, so two rectangles that merely touch leave
+   a sub-pixel hairline. Each connector is bled 1px into the black of the
+   bars it joins - invisible, and the seam goes away. */
+const BLEED = {
+  con1: { y: -1, h: 2 }, con2: { y: -1, h: 2 }, con3: { y: -1, h: 2 },
+  c1: { x: -1, w: 2 },   c2: { x: -1, w: 2 },   c3: { x: -1, w: 2 }
+};
+
 /* ---------- 4. build the DOM --------------------------------------- */
 const canvas = document.querySelector('.canvas');
 const el = {};
 
 function rect(id, r) {
+  const b = BLEED[id] || {};
   const d = document.createElement('div');
   d.className = 'piece';
   d.id = id;
-  d.style.left = r.x + 'px';
-  d.style.top = r.y + 'px';
-  d.style.width = r.w + 'px';
-  d.style.height = r.h + 'px';
+  d.style.left = (r.x + (b.x || 0)) + 'px';
+  d.style.top = (r.y + (b.y || 0)) + 'px';
+  d.style.width = (r.w + (b.w || 0)) + 'px';
+  d.style.height = (r.h + (b.h || 0)) + 'px';
   canvas.appendChild(d);
   el[id] = d;
   return d;
